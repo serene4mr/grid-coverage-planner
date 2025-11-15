@@ -1,6 +1,11 @@
 from enum import IntEnum
 from typing import Tuple, List, Dict
+from pathlib import Path
+import json
+
 import numpy as np
+
+from grid_coverage_planner.utils.logger import LOGGER
 
 
 class CellType(IntEnum):
@@ -22,8 +27,8 @@ class GridMap:
 
     def __init__(
         self,
-        rows: int, 
-        cols: int,
+        rows: int = 100,
+        cols: int = 100,
         resolution: float =0.05,
         origin: Tuple[float, float]=(0.0, 0.0),
         default_cell_type: CellType = CellType.NON_TRAVERSABLE,
@@ -223,17 +228,41 @@ class GridMap:
         """
         return [neighbor for neighbor in self.get_neighbors(row, col) if self.is_non_traversable(neighbor)]
 
-    def save(self, path: str):
+    def save(self, dir_path: str):
         """
-        Save the grid map to a file.
+        Save the grid map to a file .gm.npy
+        Save the metadata to a file .gm.json
         """
-        pass
 
-    def load(self, path: str):
+        if self.metadata['name'] == '':
+            raise ValueError("Grid map name is not set")
+
+        save_path = Path(dir_path) / f"{self.metadata['name']}"
+        if not save_path.is_dir():
+            save_path.mkdir(parents=True, exist_ok=True)
+        else:
+            raise ValueError(f"Grid map directory already exists: {save_path}")
+        
+        np.save(save_path / "data.gm.npy", self.data)
+        with open(save_path / "metadata.gm.json", "w") as f:
+            json.dump(self.metadata, f)
+        
+        LOGGER.info(f"Grid map saved to {save_path} successfully")
+
+    def load(self, dir_path: str):
         """
         Load the grid map from a file.
         """
-        pass
+
+        load_path = Path(dir_path)
+        if not load_path.is_dir():
+            raise ValueError(f"Grid map directory does not exist: {load_path}")
+        
+        self.data = np.load(load_path / "data.gm.npy")
+        with open(load_path / "metadata.gm.json", "r") as f:
+            self.metadata = json.load(f)
+        
+        LOGGER.info(f"Grid map loaded from {load_path} successfully")
     
 
     

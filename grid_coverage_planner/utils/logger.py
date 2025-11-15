@@ -52,5 +52,5 @@ def setup_logger(
 
 
 # Create a default logger instance
-logger = setup_logger()
+LOGGER = setup_logger()
 
